@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a vulnerability
+    url: https://github.com/RunesmithHub/plugin-java/security/advisories/new
+    about: Report security problems privately instead of in an issue.
+  - name: Plugin hub questions
+    url: https://github.com/RunesmithHub/registry/issues
+    about: Questions about publishing, installing or updating plugins through the plugin hub.
+  - name: Documentation
+    url: https://runesmithhub.github.io/Runesmith/
+    about: How to use Runesmith and its plugins.

@@ -1,0 +1,11 @@
+bin/
+obj/
+*.user
+.idea/
+.vs/
+/_ReSharper.Caches/
+TestResults/
+/artifacts/
+
+# Workspace settings and state Runesmith writes into folders it opens
+.runesmith/state/
