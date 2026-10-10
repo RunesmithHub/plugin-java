@@ -7,5 +7,5 @@ contact_links:
     url: https://github.com/RunesmithHub/registry/issues
     about: Questions about publishing, installing or updating plugins through the plugin hub.
   - name: Documentation
-    url: https://runesmithhub.github.io/Runesmith/
+    url: https://docs.runesmith.dev/
     about: How to use Runesmith and its plugins.

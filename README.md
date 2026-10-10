@@ -36,8 +36,8 @@ dotnet test --solution plugin-java.slnx
 
 ## Documentation
 
-[Java support](https://runesmithhub.github.io/Runesmith/plugins/java) in the
-[Runesmith documentation](https://runesmithhub.github.io/Runesmith/) describes every feature, setting and limit.
+[Java support](https://docs.runesmith.dev/plugins/java) in the
+[Runesmith documentation](https://docs.runesmith.dev/) describes every feature, setting and limit.
 
 ## License
 
