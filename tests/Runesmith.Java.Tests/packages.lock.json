@@ -246,9 +246,9 @@
       "runesmith.java": {
         "type": "Project",
         "dependencies": {
-          "Runesmith.Java.Contracts": "[1.0.0, )",
+          "Runesmith.Java.Contracts": "[0.1.1, )",
           "Runesmith.LanguageServices": "[0.1.0, )",
-          "Runesmith.Languages.Java": "[1.0.0, )",
+          "Runesmith.Languages.Java": "[0.1.1, )",
           "Runesmith.Sdk": "[0.1.0, )",
           "Runesmith.Text": "[0.1.0, )"
         }
@@ -260,7 +260,7 @@
         "type": "Project",
         "dependencies": {
           "Runesmith.LanguageServices": "[0.1.0, )",
-          "Runesmith.Languages.Java.Syntax": "[1.0.0, )"
+          "Runesmith.Languages.Java.Syntax": "[0.1.1, )"
         }
       },
       "runesmith.languages.java.syntax": {
