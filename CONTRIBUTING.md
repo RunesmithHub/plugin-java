@@ -6,7 +6,8 @@ instead. For a larger change, open an issue first, so the approach is agreed on 
 ## Making a change
 
 1. Fork the repository and create a branch from `main`.
-2. Build and test with the .NET SDK version in `global.json`:
+2. Build and test with the .NET SDK version in `global.json`. The Java analyzer is part of this repository, in
+   `src/Runesmith.Languages.Java.Syntax` and `src/Runesmith.Languages.Java`, so changes to it are made here too:
 
    ```sh
    dotnet build plugin-java.slnx -warnaserror

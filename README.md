@@ -2,7 +2,7 @@
 
 The official Java plugin for [Runesmith](https://github.com/RunesmithHub/Runesmith), `runesmith.java`. It adds:
 
-- Java highlighting, completion, signature help, hover, go to definition and problems, from Runesmith's own Java analyzer, which runs
+- Java highlighting, completion, signature help, hover, go to definition and problems, from the plugin's own Java analyzer, which runs
   inside Runesmith and needs no JVM or language server.
 - Building with Maven or Gradle, with compiler errors in the Problems panel.
 - Run configurations for Java applications, Maven goals, Gradle tasks and JUnit tests.
@@ -24,6 +24,10 @@ Project templates come from a separate plugin, [Java templates](https://github.c
 Install **Java** from the plugin manager in Runesmith, or from [the plugin hub](https://hub.runesmith.dev).
 
 ## Build and test
+
+The Java analyzer lives in this repository: `src/Runesmith.Languages.Java.Syntax` is the lexer and parser, and
+`src/Runesmith.Languages.Java` the semantics, the JDK and library class reader, and Maven and Gradle projects. Their tests are in
+`tests`; some read a JDK 25 or newer, found through `JAVA_HOME` or the `PATH`, and skip without one.
 
 You need the .NET SDK version in `global.json`.
 

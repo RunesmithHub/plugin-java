@@ -10,8 +10,6 @@
     <PackageVersion Include="Runesmith.Sdk" Version="$(RunesmithVersion)" />
     <PackageVersion Include="Runesmith.Text" Version="$(RunesmithVersion)" />
     <PackageVersion Include="Runesmith.LanguageServices" Version="$(RunesmithVersion)" />
-    <PackageVersion Include="Runesmith.Languages.Java" Version="$(RunesmithVersion)" />
-    <PackageVersion Include="Runesmith.Languages.Java.Syntax" Version="$(RunesmithVersion)" />
   </ItemGroup>
   <ItemGroup Label="User interface">
     <PackageVersion Include="Avalonia" Version="$(AvaloniaVersion)" />

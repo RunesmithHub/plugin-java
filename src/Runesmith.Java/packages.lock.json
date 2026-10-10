@@ -8,22 +8,6 @@
         "resolved": "5.6.0",
         "contentHash": "Kcobt3pnOdO0A+6CKiMHZdTEluJpsfxiV20axtZdmfBQnDmiWTKPJADlgAfdTuKNAnVarrkJa0UEGwuOo91muw=="
       },
-      "Runesmith.Languages.Java": {
-        "type": "Direct",
-        "requested": "[0.1.0, )",
-        "resolved": "0.1.0",
-        "contentHash": "ImC8f6Ag4WMXhoCSHZvt6SNqMfy/6JHme97fgmLGt14ahTPL/3/VlY+R+UQMLrh8NEF8GDcsFRx5HTYyVKBIqA==",
-        "dependencies": {
-          "Runesmith.LanguageServices": "0.1.0",
-          "Runesmith.Languages.Java.Syntax": "0.1.0"
-        }
-      },
-      "Runesmith.Languages.Java.Syntax": {
-        "type": "Direct",
-        "requested": "[0.1.0, )",
-        "resolved": "0.1.0",
-        "contentHash": "xOQ4ezvK494J8SO6ZztLNIBIKXkmjWvjai9VXfNTzT49hfkd3wr6OkWziyVZhskqm8Q3NNtFYTW7GPgwrZHtqw=="
-      },
       "Runesmith.LanguageServices": {
         "type": "Direct",
         "requested": "[0.1.0, )",
@@ -76,6 +60,16 @@
         "contentHash": "NdNWGDiZ6eS/Mf/9+QHR91cj1K7Hy+PX9yrHI/zM7xFYuj9IWT2uxtB6sCHjrnxAeLV9fut1R6zHDUGKX6f9lQ=="
       },
       "runesmith.java.contracts": {
+        "type": "Project"
+      },
+      "runesmith.languages.java": {
+        "type": "Project",
+        "dependencies": {
+          "Runesmith.LanguageServices": "[0.1.0, )",
+          "Runesmith.Languages.Java.Syntax": "[1.0.0, )"
+        }
+      },
+      "runesmith.languages.java.syntax": {
         "type": "Project"
       },
       "Avalonia": {
