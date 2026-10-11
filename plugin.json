@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "runesmith.java",
   "name": "Java",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "summary": "Java highlighting, completion, navigation and problems, building with Maven or Gradle, and JDK downloads.",
   "authors": [
     "Dylan de Beer"
@@ -10,7 +10,7 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/RunesmithHub/plugin-java",
   "homepage": "https://docs.runesmith.dev/plugins/java",
-  "runesmithApi": "^0.1.0",
+  "runesmithApi": "^0.1.2",
   "projects": {
     "contracts": "src/Runesmith.Java.Contracts/Runesmith.Java.Contracts.csproj",
     "implementation": "src/Runesmith.Java/Runesmith.Java.csproj"
@@ -38,6 +38,7 @@
     "api.foojay.io",
     "*"
   ],
+  "languages": ["en"],
   "icon": "icon.png",
   "categories": [
     "Languages",
