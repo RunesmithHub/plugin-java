@@ -8,6 +8,7 @@ using Runesmith.Sdk.Sdks;
 namespace Runesmith.Java;
 
 /// <summary>Runesmith's own Java analyzer: completion, hover, go to definition, signature help and problems, without a JVM.</summary>
+[Export]
 [Shared]
 public sealed class JavaAnalysis
 {

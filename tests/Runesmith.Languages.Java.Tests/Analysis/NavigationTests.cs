@@ -41,6 +41,20 @@ public sealed class NavigationTests
     }
 
     [Fact]
+    public async Task HoverOnAnAnnotationAndOnAPackageInAQualifiedTypeSaysWhatTheyAre()
+    {
+        await using var project = await JavaTestProject.CreateAsync(Files());
+        var onAnnotation = project.Open("app/App.java", "package app;\nclass App { @Over$$ride public String toString() { java.util.List<String> names = null; return \"\"; } }");
+        var onPackage = project.Snapshot("app/App.java").GetText().IndexOf("util", StringComparison.Ordinal);
+
+        var annotation = await project.HoverAsync("app/App.java", onAnnotation);
+        var package = await project.HoverAsync("app/App.java", onPackage);
+
+        Assert.Contains("@interface java.lang.Override", annotation?.Markdown, StringComparison.Ordinal);
+        Assert.Contains("package java.util", package?.Markdown, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task HoverOnAJdkMemberShowsItsSignature()
     {
         await using var project = await JavaTestProject.CreateAsync(Files());

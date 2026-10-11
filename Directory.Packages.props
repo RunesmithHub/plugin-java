@@ -3,8 +3,8 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <!-- Versions listed here also apply to packages that come in transitively, so a vulnerable transitive package can be raised here. -->
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
-    <AvaloniaVersion>12.1.3</AvaloniaVersion>
-    <RunesmithVersion>0.1.0</RunesmithVersion>
+    <AvaloniaVersion>12.1.4</AvaloniaVersion>
+    <RunesmithVersion>0.1.2</RunesmithVersion>
   </PropertyGroup>
   <ItemGroup Label="Runesmith">
     <PackageVersion Include="Runesmith.Sdk" Version="$(RunesmithVersion)" />
@@ -14,7 +14,7 @@
   <ItemGroup Label="User interface">
     <PackageVersion Include="Avalonia" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
-    <PackageVersion Include="HammerUI" Version="0.1.0" />
+    <PackageVersion Include="HammerUI" Version="0.1.1" />
   </ItemGroup>
   <ItemGroup Label="Composition">
     <!-- Plugins share these with Runesmith, so the whole family has one version. -->

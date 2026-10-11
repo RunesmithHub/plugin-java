@@ -298,7 +298,8 @@ internal sealed partial class SemanticModel
         return (map, exact);
     }
 
-    private static string OverrideKey(MemberRef<MethodSymbol> method)
+    /// <summary>Gets what two methods share when one overrides the other: the name and the erased parameter types, as seen from one type.</summary>
+    public static string OverrideKey(MemberRef<MethodSymbol> method)
     {
         var key = new System.Text.StringBuilder(method.Member.Name).Append('(');
         foreach (var parameter in method.Member.ParameterTypes)

@@ -2,6 +2,7 @@ using Runesmith.Languages.Java.Jdk;
 using Runesmith.Languages.Java.Semantics;
 using Runesmith.Languages.Java.Syntax;
 using Runesmith.LanguageServices;
+using Runesmith.Sdk.Languages;
 using Runesmith.Text;
 
 namespace Runesmith.Languages.Java.Analysis;
@@ -35,6 +36,9 @@ public sealed class JavaAnalyzer : ILanguageAnalyzer
 
     internal Task Loaded { get; private set; } = Task.CompletedTask;
 
+    /// <summary>Raised, on a background thread, when the JDK or the folder's projects finish loading, so what names mean may have changed.</summary>
+    public event Action? ProjectsLoaded;
+
     /// <summary>Gets how many completion lists were computed, as opposed to filtered from a kept one.</summary>
     internal int ComputedCompletionLists => completion.Computed;
 
@@ -50,6 +54,7 @@ public sealed class JavaAnalyzer : ILanguageAnalyzer
         {
             completion.WarmUp(Workspace.Fallback);
             context.InvalidateDiagnostics();
+            ProjectsLoaded?.Invoke();
             return Task.CompletedTask;
         });
     }
@@ -76,6 +81,7 @@ public sealed class JavaAnalyzer : ILanguageAnalyzer
             foreach (var project in Workspace.Projects)
                 completion.WarmUp(project);
             context.InvalidateDiagnostics();
+            ProjectsLoaded?.Invoke();
         });
         return Task.CompletedTask;
     }
@@ -153,6 +159,64 @@ public sealed class JavaAnalyzer : ILanguageAnalyzer
         return problems;
     }
 
+    /// <summary>Gets the types and members a document declares, as a tree, for the outline and the breadcrumbs.</summary>
+    public IReadOnlyList<DocumentSymbol> DocumentSymbols(string path, TextSnapshot snapshot, CancellationToken cancellationToken) =>
+        JavaStructure.Symbols(TreeOf(path, snapshot), cancellationToken);
+
+    /// <summary>Gets the lines of a document that fold.</summary>
+    public IReadOnlyList<FoldingRange> FoldingRanges(string path, TextSnapshot snapshot, CancellationToken cancellationToken) =>
+        JavaStructure.Folding(TreeOf(path, snapshot), cancellationToken);
+
+    /// <summary>Gets the spans Expand Selection grows through from an offset, the smallest first.</summary>
+    public IReadOnlyList<TextSpan> SelectionRanges(string path, TextSnapshot snapshot, int offset) =>
+        JavaStructure.SelectionRanges(TreeOf(path, snapshot), offset);
+
+    /// <summary>Gets the names of a document, or of a part of it, classified by what they mean; null while the document is not open.</summary>
+    public IReadOnlyList<SemanticToken>? SemanticTokens(string path, TextSnapshot snapshot, TextSpan? span, CancellationToken cancellationToken) =>
+        ModelOf(path, snapshot) is { } model
+            ? JavaSemanticTokens.Get(model, span?.Start ?? 0, span?.End ?? model.Tree.Text.Length, cancellationToken)
+            : null;
+
+    /// <summary>Finds every use of the symbol at an offset in the sources of the folder's projects.</summary>
+    public IReadOnlyList<DocumentLocation> References(string path, TextSnapshot snapshot, int offset, bool includeDeclaration, CancellationToken cancellationToken) =>
+        ModelOf(path, snapshot) is { } model ? JavaReferences.Find(model, Workspace.Projects, offset, includeDeclaration, cancellationToken) : [];
+
+    /// <summary>Finds the types that extend or implement the type at an offset, or the methods that override the method there.</summary>
+    public IReadOnlyList<DocumentLocation> Implementations(string path, TextSnapshot snapshot, int offset, CancellationToken cancellationToken) =>
+        ModelOf(path, snapshot) is { } model ? JavaReferences.Implementations(model, Workspace.Projects, offset, cancellationToken) : [];
+
+    /// <summary>Finds the occurrences of the symbol at an offset in its own document; null while the document is not open.</summary>
+    public IReadOnlyList<DocumentHighlight>? Highlights(string path, TextSnapshot snapshot, int offset, CancellationToken cancellationToken) =>
+        ModelOf(path, snapshot) is { } model ? JavaReferences.Highlights(model, offset, cancellationToken) : null;
+
+    /// <summary>Finds the types, methods and fields of the folder's sources whose names contain a query.</summary>
+    public IReadOnlyList<WorkspaceSymbol> WorkspaceSymbols(string query, CancellationToken cancellationToken) =>
+        JavaWorkspaceSymbols.Find(Workspace.Projects, query, cancellationToken);
+
+    /// <summary>Gets the method or constructor at an offset as the root of a call hierarchy, or nothing.</summary>
+    public IReadOnlyList<HierarchyItem> PrepareCallHierarchy(string path, TextSnapshot snapshot, int offset) =>
+        ModelOf(path, snapshot) is { } model ? JavaHierarchies.PrepareCalls(model, offset) : [];
+
+    /// <summary>Gets the methods that call an item's method.</summary>
+    public IReadOnlyList<HierarchyCall> IncomingCalls(HierarchyItem item, CancellationToken cancellationToken) =>
+        ModelOf(item) is var (model, offset) ? JavaHierarchies.IncomingCalls(model, Workspace.Projects, offset, cancellationToken) : [];
+
+    /// <summary>Gets the methods an item's method calls.</summary>
+    public IReadOnlyList<HierarchyCall> OutgoingCalls(HierarchyItem item, CancellationToken cancellationToken) =>
+        ModelOf(item) is var (model, offset) ? JavaHierarchies.OutgoingCalls(model, offset, cancellationToken) : [];
+
+    /// <summary>Gets the type at an offset as the root of a type hierarchy, or nothing.</summary>
+    public IReadOnlyList<HierarchyItem> PrepareTypeHierarchy(string path, TextSnapshot snapshot, int offset) =>
+        ModelOf(path, snapshot) is { } model ? JavaHierarchies.PrepareTypes(model, offset) : [];
+
+    /// <summary>Gets the class an item's type extends and the interfaces it names.</summary>
+    public IReadOnlyList<HierarchyItem> Supertypes(HierarchyItem item) =>
+        ModelOf(item) is var (model, offset) ? JavaHierarchies.Supertypes(model, offset) : [];
+
+    /// <summary>Gets the types that extend or implement an item's type directly.</summary>
+    public IReadOnlyList<HierarchyItem> Subtypes(HierarchyItem item, CancellationToken cancellationToken) =>
+        ModelOf(item) is var (model, offset) ? JavaHierarchies.Subtypes(model, Workspace.Projects, offset, cancellationToken) : [];
+
     public ValueTask DisposeAsync()
     {
         loading.Cancel();
@@ -161,4 +225,22 @@ public sealed class JavaAnalyzer : ILanguageAnalyzer
     }
 
     private SemanticModel? ModelFor(SourceDocument document) => documents.ModelFor(document, Workspace.ProjectFor(document.Path));
+
+    private SemanticModel? ModelOf(string path, TextSnapshot? snapshot) => documents.ModelFor(path, snapshot, Workspace.ProjectFor);
+
+    // What only syntax tells does not wait for the document to be opened in a project.
+    private JavaSyntaxTree TreeOf(string path, TextSnapshot snapshot) =>
+        ModelOf(path, snapshot)?.Tree ?? JavaSyntaxTree.Parse(snapshot.GetText(), Workspace.ProjectFor(path).ParseOptions);
+
+    // The file an item was made in, as it is now: the open document, or the file of its project.
+    private (SemanticModel Model, int Offset)? ModelOf(HierarchyItem item)
+    {
+        if (item.Data is not JavaAnchor anchor)
+            return null;
+        if (ModelOf(anchor.Path, null) is { } open)
+            return (open, anchor.Offset);
+
+        var project = Workspace.ProjectFor(anchor.Path).Snapshot;
+        return project.Sources.FindFile(anchor.Path) is { } file ? (project.ModelFor(file), anchor.Offset) : null;
+    }
 }

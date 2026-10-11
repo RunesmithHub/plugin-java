@@ -37,6 +37,20 @@ internal sealed class JavaDocuments
         return isLatest ? snapshot.ModelFor(file) : new SemanticModel(snapshot, file);
     }
 
+    /// <summary>Gets the semantic model of an open document for a snapshot of its text, or of its newest version without one; null when the
+    /// document is not open.</summary>
+    public SemanticModel? ModelFor(string path, TextSnapshot? snapshot, Func<string, JavaProjectModel> projectFor)
+    {
+        // A document that was never saved is known by a name its host chose; its text tells it apart as well.
+        if (!documents.TryGetValue(path, out var state))
+            state = snapshot is null ? null : documents.Values.FirstOrDefault(candidate => candidate.Knows(snapshot));
+        if (state is null)
+            return null;
+
+        var document = state.DocumentFor(snapshot);
+        return ModelFor(document, projectFor(document.Path));
+    }
+
     /// <summary>One open document: its newest tree, the edits not parsed yet, and recent versions' trees for requests that lag behind.</summary>
     private sealed class DocumentState(SourceDocument opened)
     {
@@ -45,6 +59,7 @@ internal sealed class JavaDocuments
         private readonly Lock gate = new();
         private readonly List<(SourceDocument Document, IReadOnlyList<TextChange> Changes)> pending = [];
         private readonly Dictionary<int, SourceFile> recent = [];
+        private readonly Queue<SourceDocument> seen = new([opened]);
         private SourceDocument latest = opened;
         private SourceFile? file;
         private JavaParseOptions? options;
@@ -57,6 +72,27 @@ internal sealed class JavaDocuments
             {
                 pending.Add((document, changes));
                 latest = document;
+                seen.Enqueue(document);
+                if (seen.Count > RecentVersions)
+                    seen.Dequeue();
+            }
+        }
+
+        public bool Knows(TextSnapshot snapshot)
+        {
+            lock (gate)
+                return seen.Any(document => ReferenceEquals(document.Snapshot, snapshot));
+        }
+
+        /// <summary>Gets the version of the document a snapshot is the text of; a snapshot no kept version has gets a version of its own.</summary>
+        public SourceDocument DocumentFor(TextSnapshot? snapshot)
+        {
+            lock (gate)
+            {
+                if (snapshot is null)
+                    return latest;
+
+                return seen.FirstOrDefault(document => ReferenceEquals(document.Snapshot, snapshot)) ?? latest with { Version = int.MinValue, Snapshot = snapshot };
             }
         }
 

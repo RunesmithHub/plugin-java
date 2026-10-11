@@ -5,6 +5,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Runesmith.Languages.Java.Syntax\Runesmith.Languages.Java.Syntax.csproj" />
     <PackageReference Include="Runesmith.LanguageServices" />
+    <!-- The types of the editor's language features; Runesmith supplies the library, so it is not copied along. -->
+    <PackageReference Include="Runesmith.Sdk" ExcludeAssets="runtime" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Runesmith.Languages.Java.Tests" />

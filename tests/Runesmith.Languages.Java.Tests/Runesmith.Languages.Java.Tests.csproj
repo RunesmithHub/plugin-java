@@ -13,5 +13,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Runesmith.Languages.Java\Runesmith.Languages.Java.csproj" />
+    <!-- The analyzer leaves out the library Runesmith provides; the tests need their own copy. -->
+    <PackageReference Include="Runesmith.Sdk" />
   </ItemGroup>
 </Project>

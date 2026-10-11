@@ -32,14 +32,18 @@ internal static class JavaSymbols
         }
 
         var typer = new ExpressionTyper(model);
-        var builder = new ScopeBuilder(typer);
+        return Find(typer, new ScopeBuilder(typer), token);
+    }
+
+    /// <summary>Finds the symbol of an identifier token, with a typer and a scope builder that many lookups in one file share.</summary>
+    public static (object Symbol, SourceSpan Span)? Find(ExpressionTyper typer, ScopeBuilder builder, JavaToken token)
+    {
         var scope = builder.ScopeAt(token.Span.Start, out var path);
         var name = path[^1] as IdentifierSyntax;
         if (name is null || path.Count < 2)
             return null;
 
-        var parent = path[^2];
-        var symbol = Resolve(model, typer, builder, scope, name, parent, path);
+        var symbol = Resolve(typer.Model, typer, builder, scope, name, path[^2], path);
         return symbol is null ? null : (symbol, name.Span);
     }
 
@@ -62,16 +66,22 @@ internal static class JavaSymbols
             case MethodInvocationExpressionSyntax call when call.Name == name:
                 return typer.ResolveCall(call, scope).Chosen;
             case ClassTypeSyntax classType when classType.Name == name:
-                return model.ResolveType(classType, scope) is ClassTypeReference resolved && model.FindClass(resolved.BinaryName) is not null
-                    ? new TypeName(resolved.BinaryName)
-                    : null;
+                if (model.ResolveType(classType, scope) is ClassTypeReference resolved && model.FindClass(resolved.BinaryName) is not null)
+                    return new TypeName(resolved.BinaryName);
+                return model.Project.IsPackage(classType.QualifiedName) ? new PackageName(classType.QualifiedName) : null;
             case NameSyntax qualified:
             {
                 var parts = qualified.Parts.TakeWhile(p => p != name).Select(p => p.Text).Append(name.Text).ToList();
                 var text = string.Join('.', parts);
                 if (model.FileScope.ResolveCanonical(text) is { } type)
                     return new TypeName(type);
-                return model.Project.IsPackage(text) ? new PackageName(text) : null;
+                if (model.Project.IsPackage(text))
+                    return new PackageName(text);
+
+                // A name of one part, such as an annotation's, is a type in scope.
+                return parts.Count == 1 && typer.ResolveName(text, scope, name.Start) is { Kind: ExpressionKind.Type, Symbol: string binary }
+                    ? new TypeName(binary)
+                    : null;
             }
 
             default:
@@ -261,6 +271,17 @@ internal static class JavaSymbols
 
         var path = tree == model.Tree ? currentPath : FileOf(model, symbol) ?? currentPath;
         return tree == model.Tree ? Located(path, currentText, name) : Located(path, tree.Text, name);
+    }
+
+    /// <summary>Gets where a type, field or method is declared in source: its file, the file's tree, the declaration and the span of its
+    /// name; null for library symbols.</summary>
+    public static (string Path, JavaSyntaxTree Tree, SyntaxNode Node, SourceSpan Name)? Source(SemanticModel model, object symbol)
+    {
+        var (tree, node) = Declaration(model, symbol);
+        if (tree is null || node is null || NameOf(node) is not { } name)
+            return null;
+
+        return (tree == model.Tree ? model.File.Path : FileOf(model, symbol) ?? model.File.Path, tree, node, name);
     }
 
     private static string? FileOf(SemanticModel model, object symbol) => symbol switch
