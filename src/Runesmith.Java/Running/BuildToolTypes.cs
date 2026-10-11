@@ -20,21 +20,21 @@ public sealed class MavenGoalsType([Import(AllowDefault = true)] ISdkService? sd
 
     public string Id => TypeId;
 
-    public string Name => "Maven goals";
+    public string Name => Strings.RunMavenName;
 
     public string Icon => "package";
 
-    public string Description => "Run Maven goals, such as clean install, with profiles.";
+    public string Description => Strings.RunMavenDescription;
 
     public bool CanDebug => false;
 
     public Task<OptionSet> GetOptionsAsync(string rootPath, CancellationToken cancellationToken) => Task.FromResult(Options);
 
-    private static readonly OptionSet Options = new(
+    private static OptionSet Options => new(
     [
-        new Option(Goals, "Goals", OptionKind.Text) { IsRequired = true, Default = "package", Placeholder = "clean install" },
-        new Option(Profiles, "Profiles", OptionKind.Text) { Placeholder = "dev,fast", Description = "The profiles to activate, separated by commas." },
-        JavaRunSupport.ArgumentsOption("Arguments", "More arguments for Maven, one per line, such as -DskipTests."),
+        new Option(Goals, Strings.OptionGoals, OptionKind.Text) { IsRequired = true, Default = "package", Placeholder = "clean install" },
+        new Option(Profiles, Strings.OptionProfiles, OptionKind.Text) { Placeholder = "dev,fast", Description = Strings.OptionProfilesDescription },
+        JavaRunSupport.ArgumentsOption(Strings.OptionArguments, Strings.OptionMavenArgumentsDescription),
         JavaRunSupport.JdkOption,
         JavaRunSupport.EnvironmentOption,
         JavaRunSupport.WorkingDirectoryOption,
@@ -74,20 +74,20 @@ public sealed class GradleTasksType([Import(AllowDefault = true)] ISdkService? s
 
     public string Id => TypeId;
 
-    public string Name => "Gradle tasks";
+    public string Name => Strings.RunGradleName;
 
     public string Icon => "layers";
 
-    public string Description => "Run Gradle tasks, such as build or run.";
+    public string Description => Strings.RunGradleDescription;
 
     public bool CanDebug => false;
 
     public Task<OptionSet> GetOptionsAsync(string rootPath, CancellationToken cancellationToken) => Task.FromResult(Options);
 
-    private static readonly OptionSet Options = new(
+    private static OptionSet Options => new(
     [
-        new Option(Tasks, "Tasks", OptionKind.Text) { IsRequired = true, Default = "build", Placeholder = "clean build" },
-        JavaRunSupport.ArgumentsOption("Arguments", "More arguments for Gradle, one per line, such as --info."),
+        new Option(Tasks, Strings.OptionTasks, OptionKind.Text) { IsRequired = true, Default = "build", Placeholder = "clean build" },
+        JavaRunSupport.ArgumentsOption(Strings.OptionArguments, Strings.OptionGradleArgumentsDescription),
         JavaRunSupport.JdkOption,
         JavaRunSupport.EnvironmentOption,
         JavaRunSupport.WorkingDirectoryOption,
@@ -122,24 +122,24 @@ public sealed class JUnitTestsType([Import(AllowDefault = true)] ISdkService? sd
 
     public string Id => TypeId;
 
-    public string Name => "JUnit tests";
+    public string Name => Strings.RunJunitName;
 
     public string Icon => "check-circle";
 
-    public string Description => "Run the JUnit tests of a Maven or Gradle project, or the ones a filter picks.";
+    public string Description => Strings.RunJunitDescription;
 
     public bool CanDebug => false;
 
     public Task<OptionSet> GetOptionsAsync(string rootPath, CancellationToken cancellationToken) => Task.FromResult(Options);
 
-    private static readonly OptionSet Options = new(
+    private static OptionSet Options => new(
     [
-        new Option(Filter, "Tests", OptionKind.Text)
+        new Option(Filter, Strings.OptionTests, OptionKind.Text)
         {
-            Placeholder = "All tests",
-            Description = "A test class, a method such as MathTest#adds, or a pattern such as *IntegrationTest; empty runs every test.",
+            Placeholder = Strings.OptionTestsPlaceholder,
+            Description = Strings.OptionTestsDescription,
         },
-        JavaRunSupport.ArgumentsOption("Arguments", "More arguments for the build tool, one per line."),
+        JavaRunSupport.ArgumentsOption(Strings.OptionArguments, Strings.OptionBuildToolArgumentsDescription),
         JavaRunSupport.JdkOption,
         JavaRunSupport.EnvironmentOption,
         JavaRunSupport.WorkingDirectoryOption,
@@ -155,7 +155,7 @@ public sealed class JUnitTestsType([Import(AllowDefault = true)] ISdkService? sd
         var filter = configuration.Values.Get(Filter)?.Trim();
         var extra = configuration.Values.GetList(JavaRunSupport.Arguments);
         var build = JavaBuildProvider.FindTool(context.RootPath)
-            ?? throw new InvalidOperationException("JUnit tests run through Maven or Gradle, and the folder has neither a pom.xml nor a Gradle build.");
+            ?? throw new InvalidOperationException(Strings.RunNoBuildTool);
         JavaBuildProvider.BuildTool tool = build.Name == "Maven"
             ? JavaBuildProvider.Tool(context.RootPath, "Maven", "mvnw", "mvn",
                 string.IsNullOrEmpty(filter) ? ["test", .. extra] : ["test", "-Dtest=" + filter, "-Dsurefire.failIfNoSpecifiedTests=false", .. extra])

@@ -17,29 +17,29 @@ internal static class JavaRunSupport
     /// <summary>The JVM option that makes a program wait for a debugger, which prints the port it listens on.</summary>
     public const string JdwpAgent = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=127.0.0.1:0";
 
-    public static Option JdkOption { get; } = new(Jdk, "JDK", OptionKind.Sdk)
+    public static Option JdkOption => new(Jdk, Strings.Jdk, OptionKind.Sdk)
     {
         SdkKind = JdkSdkProvider.SdkKind,
-        Description = "The JDK that runs the program; the default JDK when none is chosen.",
+        Description = Strings.OptionJdkDescription,
     };
 
     public static Option ArgumentsOption(string label, string description) => new(Arguments, label, OptionKind.List)
     {
         Description = description,
-        Placeholder = "Argument",
+        Placeholder = Strings.OptionArgumentsPlaceholder,
     };
 
-    public static Option EnvironmentOption { get; } = new(Environment, "Environment variables", OptionKind.List)
+    public static Option EnvironmentOption => new(Environment, Strings.OptionEnvironment, OptionKind.List)
     {
         IsKeyValueList = true,
         Group = OptionGroup.Advanced,
     };
 
-    public static Option WorkingDirectoryOption { get; } = new(WorkingDirectory, "Working directory", OptionKind.Path)
+    public static Option WorkingDirectoryOption => new(WorkingDirectory, Strings.OptionWorkingDirectory, OptionKind.Path)
     {
         PathKind = PathKind.Folder,
         Group = OptionGroup.Advanced,
-        Placeholder = "The project's folder",
+        Placeholder = Strings.OptionWorkingDirectoryPlaceholder,
     };
 
     /// <summary>Finds the JDK a configuration asks for: its own, the user's default, <c>JAVA_HOME</c>, or none, which means the <c>java</c>

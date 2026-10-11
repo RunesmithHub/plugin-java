@@ -34,7 +34,7 @@ public sealed class JdkSdkProvider : ISdkProvider
 
     public string Kind => SdkKind;
 
-    public string Name => "JDK";
+    public string Name => Strings.Jdk;
 
     public Task<IReadOnlyList<InstalledSdk>> FindInstalledAsync(CancellationToken cancellationToken) =>
         Task.Run<IReadOnlyList<InstalledSdk>>(() =>
@@ -94,9 +94,9 @@ public sealed class JdkSdkProvider : ISdkProvider
         var download = release;
         if (FoojayMetadata.PackageId(release.Download) is { } id)
         {
-            progress.Report(new SdkInstallProgress("Preparing", null));
+            progress.Report(new SdkInstallProgress(Strings.ProgressPreparing, null));
             var info = FoojayMetadata.ParsePackageInfo(await http.GetStringAsync(FoojayMetadata.PackageInfoUri(id), cancellationToken).ConfigureAwait(false))
-                ?? throw new InvalidDataException($"There is no download for {release.Vendor} {release.Version}.");
+                ?? throw new InvalidDataException(Strings.JdkNoDownload(vendor: release.Vendor ?? "", version: release.Version));
             download = release with { Download = info.Download, Checksum = release.Checksum ?? info.Checksum, ChecksumAlgorithm = release.ChecksumAlgorithm ?? info.ChecksumType };
         }
 
@@ -104,7 +104,7 @@ public sealed class JdkSdkProvider : ISdkProvider
         var unpacked = await SdkDownloads.DownloadAndUnpackAsync(http, download, work, progress, cancellationToken).ConfigureAwait(false);
         try
         {
-            progress.Report(new SdkInstallProgress("Installing", null));
+            progress.Report(new SdkInstallProgress(Strings.ProgressInstalling, null));
             var entries = Directory.GetFileSystemEntries(unpacked);
             var content = entries is [var only] && Directory.Exists(only) ? only : unpacked;
             var target = Path.Combine(environment.ManagedFolder, FolderName(release));
@@ -114,7 +114,7 @@ public sealed class JdkSdkProvider : ISdkProvider
             if (FindHome(target) is not { } home || JdkInstallation.FromHome(home) is not { } jdk)
             {
                 SdkDownloads.DeleteFolder(target);
-                throw new InvalidDataException($"The download of {release.Vendor} {release.Version} does not contain a JDK.");
+                throw new InvalidDataException(Strings.JdkDownloadIncomplete(vendor: release.Vendor ?? "", version: release.Version));
             }
 
             return Describe(jdk);
@@ -129,7 +129,7 @@ public sealed class JdkSdkProvider : ISdkProvider
     {
         ArgumentNullException.ThrowIfNull(sdk);
         if (sdk.Kind != SdkKind || sdk.Source != SdkSource.Managed || ManagedFolderOf(sdk.Path) is not { } folder)
-            throw new InvalidOperationException($"Runesmith did not install the JDK at {sdk.Path}, so it does not remove it.");
+            throw new InvalidOperationException(Strings.JdkNotManaged(sdk.Path));
 
         return Task.Run(() => SdkDownloads.DeleteFolder(folder), cancellationToken);
     }

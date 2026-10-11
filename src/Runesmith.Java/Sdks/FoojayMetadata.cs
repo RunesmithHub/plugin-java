@@ -33,7 +33,7 @@ internal sealed record FoojayPackageInfo(Uri Download, string? Checksum, string?
 internal static class FoojayMetadata
 {
     /// <summary>The variant name of a JDK that comes with JavaFX.</summary>
-    public const string JavaFxPackage = "JDK with JavaFX";
+    public static string JavaFxPackage => Strings.JdkWithJavafx;
 
     private const string Api = "https://api.foojay.io/disco/v3.0/";
 

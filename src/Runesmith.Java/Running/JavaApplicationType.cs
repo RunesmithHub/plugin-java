@@ -48,11 +48,11 @@ public sealed class JavaApplicationType : IRunConfigurationType
 
     public string Id => TypeId;
 
-    public string Name => "Java application";
+    public string Name => Strings.RunApplicationName;
 
     public string Icon => "play";
 
-    public string Description => "Run a class with a main method, or a compact source file.";
+    public string Description => Strings.RunApplicationDescription;
 
     public bool CanDebug => true;
 
@@ -87,7 +87,7 @@ public sealed class JavaApplicationType : IRunConfigurationType
         var values = configuration.Values;
         var main = values.Get(MainClass)?.Trim();
         if (string.IsNullOrEmpty(main))
-            throw new InvalidOperationException($"{configuration.Name} has no main class.");
+            throw new InvalidOperationException(Strings.RunNoMainClass(configuration.Name));
 
         var javaHome = await JavaRunSupport.FindJavaHomeAsync(values, sdks, cancellationToken).ConfigureAwait(false);
         var java = JavaRunSupport.Tool(javaHome, "java");
@@ -154,23 +154,23 @@ public sealed class JavaApplicationType : IRunConfigurationType
     {
         List<Option> options =
         [
-            new Option(MainClass, "Main class", OptionKind.Text)
+            new Option(MainClass, Strings.OptionMainClass, OptionKind.Text)
             {
                 IsRequired = true,
                 Placeholder = "com.example.Main",
-                Description = "The class with the main method, or the path of a compact source file such as Hello.java.",
+                Description = Strings.OptionMainClassDescription,
             },
             JavaRunSupport.JdkOption,
-            new Option(VmOptions, "VM options", OptionKind.List) { Placeholder = "-Xmx512m", Description = "Options for the JVM, one per line." },
-            JavaRunSupport.ArgumentsOption("Program arguments", "Arguments passed to main, one per line."),
+            new Option(VmOptions, Strings.OptionVmOptions, OptionKind.List) { Placeholder = "-Xmx512m", Description = Strings.OptionVmOptionsDescription },
+            JavaRunSupport.ArgumentsOption(Strings.OptionProgramArguments, Strings.OptionProgramArgumentsDescription),
         ];
         if (modular)
         {
-            options.Add(new Option(Module, "Module", OptionKind.Text)
+            options.Add(new Option(Module, Strings.OptionModule, OptionKind.Text)
             {
                 Group = OptionGroup.Advanced,
                 Placeholder = "com.example.app",
-                Description = "The module of the main class, which then runs from the module path.",
+                Description = Strings.OptionModuleDescription,
             });
         }
 
