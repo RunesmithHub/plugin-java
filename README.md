@@ -4,6 +4,8 @@ The official Java plugin for [Runesmith](https://github.com/RunesmithHub/Runesmi
 
 - Java highlighting, completion, signature help, hover, go to definition and problems, from the plugin's own Java analyzer, which runs
   inside Runesmith and needs no JVM or language server.
+- Completion that inserts the parentheses a call needs, after a method's name or a type after `new`, with the caret between them when the
+  call takes arguments, and a diamond for generic types.
 - Find references, go to implementation, the occurrences of the name under the caret, the outline and breadcrumbs, go to symbol in the
   file and in the folder, folding, expand selection, call and type hierarchies, and names colored by what they mean.
 - Building with Maven or Gradle, with compiler errors in the Problems panel.
