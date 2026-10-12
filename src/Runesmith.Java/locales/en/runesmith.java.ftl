@@ -53,6 +53,8 @@ run-no-build-tool = JUnit tests run through Maven or Gradle, and the folder has 
 ## The JDKs in Settings › SDKs.
 
 jdk = JDK
+# Shown under the title of the dialog that downloads a JDK.
+jdk-source = Builds of OpenJDK from their vendors: Temurin from Adoptium, the others as the foojay Discovery API lists them.
 # A JDK that also has the JavaFX libraries.
 jdk-with-javafx = JDK with JavaFX
 # The steps of installing a JDK, shown next to the progress bar.

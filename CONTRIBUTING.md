@@ -18,7 +18,7 @@ instead. For a larger change, open an issue first, so the approach is agreed on 
 3. Check the plugin as the hub does when it publishes a release, with the hub tool:
 
    ```sh
-   dotnet tool install --global RunesmithHub.Tool --version 0.1.2
+   dotnet tool install --global RunesmithHub.Tool --version 0.1.8
    rshub check .
    ```
 

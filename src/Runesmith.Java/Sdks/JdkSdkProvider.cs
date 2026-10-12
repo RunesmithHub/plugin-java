@@ -36,6 +36,10 @@ public sealed class JdkSdkProvider : ISdkProvider
 
     public string Name => Strings.Jdk;
 
+    public string? PreferredVendor => "Temurin";
+
+    public string? DownloadDescription => Strings.JdkSource;
+
     public Task<IReadOnlyList<InstalledSdk>> FindInstalledAsync(CancellationToken cancellationToken) =>
         Task.Run<IReadOnlyList<InstalledSdk>>(() =>
         {

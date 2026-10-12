@@ -8,6 +8,7 @@ The official Java plugin for [Runesmith](https://github.com/RunesmithHub/Runesmi
   call takes arguments, and a diamond for generic types.
 - Find references, go to implementation, the occurrences of the name under the caret, the outline and breadcrumbs, go to symbol in the
   file and in the folder, folding, expand selection, call and type hierarchies, and names colored by what they mean.
+- Highlighting for Groovy, the language of Gradle build scripts.
 - Building with Maven or Gradle, with compiler errors in the Problems panel.
 - Run configurations for Java applications, Maven goals, Gradle tasks and JUnit tests.
 - Finding the JDKs on your computer, and downloading new ones from Temurin, Zulu, Corretto, Liberica and other distributions.

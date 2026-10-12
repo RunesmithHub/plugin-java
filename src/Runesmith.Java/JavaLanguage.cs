@@ -20,4 +20,9 @@ public sealed class JavaLanguage
         Quotes = ['"', '\''],
         Icon = "file-code",
     };
+
+    /// <summary>The TextMate grammar that highlights Java, which ships beside the assembly.</summary>
+    [Export(typeof(GrammarDefinition))]
+    public GrammarDefinition Grammar { get; } = new("source.java",
+        Path.Combine(Path.GetDirectoryName(typeof(JavaLanguage).Assembly.Location) ?? "", "grammars", "java.tmLanguage.json"));
 }
