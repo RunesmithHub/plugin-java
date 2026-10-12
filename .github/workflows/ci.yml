@@ -71,7 +71,7 @@ jobs:
       # Outside the checkout, whose package source mapping rejects --add-source.
       - name: Install the hub tool
         working-directory: ${{ runner.temp }}
-        run: dotnet tool install RunesmithHub.Tool --version 0.1.7 --add-source https://nuget.runesmith.dev/index.json --tool-path "$RUNNER_TEMP/rshub"
+        run: dotnet tool install RunesmithHub.Tool --version 0.1.8 --add-source https://nuget.runesmith.dev/index.json --tool-path "$RUNNER_TEMP/rshub"
 
       - name: Check the plugin
         run: |

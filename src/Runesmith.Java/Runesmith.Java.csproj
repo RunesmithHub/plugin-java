@@ -15,6 +15,10 @@
     <PackageReference Include="Runesmith.Text" ExcludeAssets="runtime" />
     <PackageReference Include="Runesmith.LanguageServices" ExcludeAssets="runtime" />
   </ItemGroup>
+  <!-- The TextMate grammars ship as files beside the assembly, where JavaLanguage and GrammarFiles find them. -->
+  <ItemGroup>
+    <None Include="grammars\**\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Runesmith.Java.Tests" />
   </ItemGroup>
