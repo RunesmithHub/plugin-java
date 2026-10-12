@@ -54,7 +54,7 @@ internal sealed class JavaCompletion
             context = CompletionContext.None;
 
         cancellationToken.ThrowIfCancellationRequested();
-        var builder = new ListBuilder(this, model, word.Start);
+        var builder = new ListBuilder(this, model, word.Start, JavaCallParentheses.For(model, context, wordSpan.End));
         builder.Add(context);
         Interlocked.Increment(ref computed);
         var computedList = builder.ToList(trigger);
@@ -137,6 +137,24 @@ internal sealed class JavaCompletion
         return index;
     }
 
+    /// <summary>Whether a member or constructor with these modifiers can be used from the file: private ones inside the same top-level class,
+    /// package-private ones inside the same package.</summary>
+    internal static bool IsAccessible(SemanticModel model, JavaModifiers modifiers, ClassSymbol owner)
+    {
+        if ((modifiers & (JavaModifiers.Public | JavaModifiers.Protected)) != 0)
+            return true;
+        if ((modifiers & JavaModifiers.Private) != 0)
+            return model.IsLocalType(owner.BinaryName) || model.File.Types.Any(t => t.Outer is null && Outermost(owner.BinaryName) == t.BinaryName);
+        return ClassNames.PackageName(owner.BinaryName) == model.FileScope.PackageName || model.IsLocalType(owner.BinaryName);
+    }
+
+    private static string Outermost(string binaryName)
+    {
+        var dot = binaryName.LastIndexOf('.');
+        var dollar = binaryName.IndexOf('$', dot + 1);
+        return dollar < 0 ? binaryName : binaryName[..dollar];
+    }
+
     private static int WordEnd(TextSnapshot snapshot, int offset)
     {
         var end = offset;
@@ -146,7 +164,7 @@ internal sealed class JavaCompletion
     }
 
     /// <summary>Collects the candidates for one word.</summary>
-    private sealed class ListBuilder(JavaCompletion owner, SemanticModel model, int wordStart)
+    private sealed class ListBuilder(JavaCompletion owner, SemanticModel model, int wordStart, JavaCallParentheses parentheses)
     {
         private readonly List<CompletionCandidate> candidates = [];
         private readonly HashSet<string> labels = new(StringComparer.Ordinal);
@@ -160,7 +178,7 @@ internal sealed class JavaCompletion
         private JavaVersion Version => model.Project.Version;
 
         public KeptList ToList(char? trigger) => new(wordStart, trigger, model.Project.Model, [.. candidates],
-            offerUnimportedTypes ? [owner.SourceTypes(model.Project), owner.LibraryTypes(model.Project.Model)] : [], typesInScope, model);
+            offerUnimportedTypes ? [owner.SourceTypes(model.Project), owner.LibraryTypes(model.Project.Model)] : [], typesInScope, model, parentheses);
 
         public void Add(CompletionContext context)
         {
@@ -277,8 +295,10 @@ internal sealed class JavaCompletion
                 var overloads = group.ToList();
                 var first = overloads[0];
                 var detail = $"{JavaTypes.Display(first.Substitute(first.Member.ReturnType))} {group.Key}({string.Join(", ", JavaSymbols.Parameters(first))})";
-                candidates.Add(new CompletionCandidate(group.Key, CompletionKind.Method, MemberGroup, detail,
-                    Data: new JavaCompletionData(model, first, overloads)));
+                var snippet = parentheses.ForMethods(group.Key, overloads);
+                var candidate = new CompletionCandidate(group.Key, CompletionKind.Method, MemberGroup, detail, InsertText: snippet,
+                    Data: new JavaCompletionData(model, first, overloads));
+                candidates.Add(candidate with { IsSnippet = snippet is not null });
             }
         }
 
@@ -289,22 +309,7 @@ internal sealed class JavaCompletion
             _ => true,
         };
 
-        // Private members are visible inside the same top-level class, package-private ones inside the same package.
-        private bool IsAccessible(JavaModifiers modifiers, ClassSymbol owner)
-        {
-            if ((modifiers & (JavaModifiers.Public | JavaModifiers.Protected)) != 0)
-                return true;
-            if ((modifiers & JavaModifiers.Private) != 0)
-                return model.IsLocalType(owner.BinaryName) || model.File.Types.Any(t => t.Outer is null && Outermost(owner.BinaryName) == t.BinaryName);
-            return ClassNames.PackageName(owner.BinaryName) == model.FileScope.PackageName || model.IsLocalType(owner.BinaryName);
-        }
-
-        private static string Outermost(string binaryName)
-        {
-            var dot = binaryName.LastIndexOf('.');
-            var dollar = binaryName.IndexOf('$', dot + 1);
-            return dollar < 0 ? binaryName : binaryName[..dollar];
-        }
+        private bool IsAccessible(JavaModifiers modifiers, ClassSymbol owner) => JavaCompletion.IsAccessible(model, modifiers, owner);
 
         private void AddTypes()
         {
@@ -512,7 +517,7 @@ internal sealed class JavaCompletion
     /// <summary>A list computed for one word, with each candidate's character mask; types that are not imported yet are added from shared
     /// indexes by the first typed letter.</summary>
     private sealed class KeptList(int wordStart, char? trigger, JavaProjectModel project, CompletionCandidate[] candidates, TypeNameIndex[] unimported,
-        HashSet<string> typesInScope, SemanticModel model)
+        HashSet<string> typesInScope, SemanticModel model, JavaCallParentheses parentheses)
     {
         private readonly ulong[] masks = [.. candidates.Select(c => CompletionMatcher.MaskOf(c.FilterText ?? c.Label))];
 
@@ -529,7 +534,7 @@ internal sealed class JavaCompletion
             for (var i = 0; i < candidates.Length; i++)
             {
                 if ((mask & ~masks[i]) == 0)
-                    sink.Add(candidates[i]);
+                    sink.Add(parentheses.CreatesObjects ? Created(candidates[i]) : candidates[i]);
             }
 
             if (typed.Length == 0)
@@ -542,11 +547,19 @@ internal sealed class JavaCompletion
                 {
                     if ((mask & ~entry.Mask) != 0 || typesInScope.Contains(entry.SimpleName) || !seen.Add(entry.BinaryName))
                         continue;
-                    sink.Add(new CompletionCandidate(entry.SimpleName, CompletionKind.Class, TypeGroup, entry.Package,
-                        Data: new JavaCompletionData(model, new TypeName(entry.BinaryName), Import: entry.BinaryName)));
+                    var snippet = parentheses.ForType(entry.SimpleName, entry.BinaryName);
+                    var candidate = new CompletionCandidate(entry.SimpleName, CompletionKind.Class, TypeGroup, entry.Package, InsertText: snippet,
+                        Data: new JavaCompletionData(model, new TypeName(entry.BinaryName), Import: entry.BinaryName));
+                    sink.Add(candidate with { IsSnippet = snippet is not null });
                 }
             }
         }
+
+        // A type after new, with the parentheses of its constructors; its class file is read only once it matches the typed word.
+        private CompletionCandidate Created(in CompletionCandidate candidate) =>
+            candidate.Data is JavaCompletionData { Symbol: TypeName type } && parentheses.ForType(candidate.Label, type.BinaryName) is { } snippet
+                ? candidate with { InsertText = snippet, IsSnippet = true }
+                : candidate;
     }
 
     /// <summary>The earliest offset each recent version's edits started at.</summary>

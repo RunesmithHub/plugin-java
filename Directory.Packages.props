@@ -4,7 +4,7 @@
     <!-- Versions listed here also apply to packages that come in transitively, so a vulnerable transitive package can be raised here. -->
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
     <AvaloniaVersion>12.1.4</AvaloniaVersion>
-    <RunesmithVersion>0.1.2</RunesmithVersion>
+    <RunesmithVersion>0.1.4</RunesmithVersion>
   </PropertyGroup>
   <ItemGroup Label="Runesmith">
     <PackageVersion Include="Runesmith.Sdk" Version="$(RunesmithVersion)" />
