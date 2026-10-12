@@ -10,7 +10,7 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/RunesmithHub/plugin-java",
   "homepage": "https://docs.runesmith.dev/plugins/java",
-  "runesmithApi": "^0.1.2",
+  "runesmithApi": "^0.1.4",
   "projects": {
     "contracts": "src/Runesmith.Java.Contracts/Runesmith.Java.Contracts.csproj",
     "implementation": "src/Runesmith.Java/Runesmith.Java.csproj"
